@@ -65,7 +65,6 @@ jobs:
 
       - name: Unzip artifact for deployment
         run: |
-          worker/
           unzip worker/release.zip
           rm worker/release.zip
         
