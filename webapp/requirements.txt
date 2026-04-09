@@ -1,3 +1,6 @@
 dash
 dash_bootstrap_components
 gunicorn
+azure-functions
+azure-data-tables
+azure-storage-blob
