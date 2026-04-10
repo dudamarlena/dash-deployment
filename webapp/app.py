@@ -4,7 +4,7 @@ import uuid
 import base64
 
 from dash import Dash, html, dcc, Input, Output, State, callback
-from azure.storage.queue import QueueClient
+from azure.storage.queue import QueueClient, TextBase64EncodePolicy
 
 app = Dash(__name__)
 server = app.server
@@ -21,8 +21,8 @@ def get_queue_client():
     return QueueClient.from_connection_string(
         conn_str=get_storage_connection_string(),
         queue_name=os.getenv("JOB_QUEUE_NAME", "llm-jobs"),
+        message_encode_policy=TextBase64EncodePolicy(),
     )
-
 
 def send_job_to_queue(prompt: str):
     job_id = str(uuid.uuid4())
@@ -31,11 +31,9 @@ def send_job_to_queue(prompt: str):
         "job_id": job_id,
         "prompt": prompt,
     }
-    message = json.dumps(payload).encode("utf-8")
-    encoded_message = base64.b64encode(message).decode("utf-8")
 
     queue_client = get_queue_client()
-    queue_client.send_message(json.dumps(encoded_message))
+    queue_client.send_message(json.dumps(payload))
 
     return job_id
 
