@@ -1,6 +1,7 @@
 import os
 import json
 import uuid
+import base64
 
 from dash import Dash, html, dcc, Input, Output, State, callback
 from azure.storage.queue import QueueClient
@@ -30,9 +31,11 @@ def send_job_to_queue(prompt: str):
         "job_id": job_id,
         "prompt": prompt,
     }
+    message = json.dumps(payload).encode("utf-8")
+    encoded_message = base64.b64encode(message).decode("utf-8")
 
     queue_client = get_queue_client()
-    queue_client.send_message(json.dumps(payload))
+    queue_client.send_message(json.dumps(encoded_message))
 
     return job_id
 
