@@ -24,7 +24,7 @@ def get_storage_connection_string() -> str:
 
 def get_table_client():
     conn = get_storage_connection_string()
-    table_name = os.getenv("JOB_STATUS_TABLE", "llmjobs")
+    table_name = os.getenv("JOB_STATUS_TABLE", "llmjobstable")
     service = TableServiceClient.from_connection_string(conn_str=conn)
     return service.get_table_client(table_name=table_name)
 
