@@ -66,6 +66,7 @@ app.layout = html.Div(
         html.Div(id="job-status", style={"marginTop": "12px"}),
         dcc.Store(id="job-store"),
         dcc.Interval(id="poll-interval", interval=5000, n_intervals=0, disabled=True),
+        html.Pre(id="result-output", style={"whiteSpace": "pre-wrap", "marginTop": "16px"})
     ],
     style={"maxWidth": "900px", "margin": "40px auto"},
 )
@@ -126,6 +127,8 @@ def poll_job_status(n_intervals, job_data):
             return f"Job {job_id}: done", result_text, True
         except Exception as e:
             return f"Job {job_id}: done, ale błąd pobrania wyniku: {str(e)}", no_update, True
+        
+        
     if status == "error":
         error_message = entity.get("error_message", "Unknown error")
         return f"Job {job_id}: error", error_message, True
