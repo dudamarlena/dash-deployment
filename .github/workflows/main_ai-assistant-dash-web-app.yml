@@ -42,7 +42,7 @@ jobs:
         with:
           name: python-app
           path: |
-            !antenv/
+            !webapp/antenv/
 
       # 🚫 Opting Out of Oryx Build
       # If you prefer to disable the Oryx build process during deployment, follow these steps:
@@ -77,4 +77,6 @@ jobs:
           app-name: 'ai-assistant-dash-web-app'
           slot-name: 'Production'
           package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
+          scm-do-build-during-deployment: true
+          enable-oryx-build: true
           
