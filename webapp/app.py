@@ -5,6 +5,10 @@ import base64
 
 from dash import Dash, html, dcc, Input, Output, State, callback
 from azure.storage.queue import QueueClient, TextBase64EncodePolicy
+from azure.data.tables import TableClient
+from azure.core.exceptions import ResourceNotFoundError
+from dash import no_update
+from azure.storage.blob import BlobServiceClient
 
 app = Dash(__name__)
 server = app.server
@@ -37,6 +41,16 @@ def send_job_to_queue(prompt: str):
 
     return job_id
 
+def get_table_client():
+    return TableClient.from_connection_string(
+        conn_str=get_storage_connection_string(),
+        table_name=os.getenv("JOB_STATUS_TABLE", "llmjobs"),
+    )
+
+
+def get_job_status(job_id: str):
+    table_client = get_table_client()
+    return table_client.get_entity(partition_key="jobs", row_key=job_id)
 
 app.layout = html.Div(
     [
@@ -56,22 +70,87 @@ app.layout = html.Div(
     style={"maxWidth": "900px", "margin": "40px auto"},
 )
 
+def get_blob_service_client():
+    return BlobServiceClient.from_connection_string(
+        conn_str=get_storage_connection_string()
+    )
+
+
+def get_job_result(blob_name: str) -> str:
+    blob_service = get_blob_service_client()
+    container_name = os.getenv("RESULTS_CONTAINER", "llm-results")
+
+    blob_client = blob_service.get_blob_client(
+        container=container_name,
+        blob=blob_name,
+    )
+
+    blob_content = blob_client.download_blob().readall().decode("utf-8")
+    result_json = json.loads(blob_content)
+
+    return result_json.get("result", "")
+
+@callback(
+    Output("job-status", "children"),
+    Output("result-output", "children"),
+    Output("poll-interval", "disabled"),
+    Input("poll-interval", "n_intervals"),
+    State("job-store", "data"),
+    prevent_initial_call=True,
+)
+def poll_job_status(n_intervals, job_data):
+    if not job_data or "job_id" not in job_data:
+        return no_update, no_update, True
+
+    job_id = job_data["job_id"]
+
+    try:
+        entity = get_job_status(job_id)
+    except ResourceNotFoundError:
+        return f"Job {job_id}: status jeszcze niedostępny", no_update, False
+    except Exception as e:
+        return f"Job {job_id}: błąd odczytu statusu: {str(e)}", no_update, False
+
+    status = entity.get("status", "unknown")
+
+    if status in ["queued", "running"]:
+        return f"Job {job_id}: {status}", no_update, False
+
+    if status == "done":
+        blob_name = entity.get("result_blob_name")
+        if not blob_name:
+            return f"Job {job_id}: done, ale brak result_blob_name", no_update, True
+
+        try:
+            result_text = get_job_result(blob_name)
+            return f"Job {job_id}: done", result_text, True
+        except Exception as e:
+            return f"Job {job_id}: done, ale błąd pobrania wyniku: {str(e)}", no_update, True
+    if status == "error":
+        error_message = entity.get("error_message", "Unknown error")
+        return f"Job {job_id}: error", error_message, True
+
+    return f"Job {job_id}: {status}", no_update, False
 
 @callback(
     Output("submit-status", "children"),
+    Output("job-store", "data"),
+    Output("poll-interval", "disabled"),
     Input("generate-btn", "n_clicks"),
     State("prompt-input", "value"),
     prevent_initial_call=True,
 )
 def submit_job(n_clicks, prompt):
     if not prompt or not prompt.strip():
-        return "Wpisz prompt."
+        return "Wpisz prompt.", None, True
 
     try:
         job_id = send_job_to_queue(prompt)
-        return f"Job wysłany. job_id={job_id}"
+        return f"Job wysłany. job_id={job_id}", {"job_id": job_id}, False
     except Exception as e:
-        return f"Błąd przy wysyłaniu joba: {str(e)}"
+        return f"Błąd przy wysyłaniu joba: {str(e)}", None, True
+
+
 
 
 if __name__ == "__main__":
