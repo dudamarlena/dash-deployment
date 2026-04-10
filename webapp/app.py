@@ -49,6 +49,9 @@ app.layout = html.Div(
         html.Br(),
         html.Button("Generate", id="generate-btn", n_clicks=0),
         html.Div(id="submit-status", style={"marginTop": "16px"}),
+        html.Div(id="job-status", style={"marginTop": "12px"}),
+        dcc.Store(id="job-store"),
+        dcc.Interval(id="poll-interval", interval=5000, n_intervals=0, disabled=True),
     ],
     style={"maxWidth": "900px", "margin": "40px auto"},
 )
