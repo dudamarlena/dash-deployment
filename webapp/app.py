@@ -116,14 +116,14 @@ def poll_job_status(n_intervals, job_data):
             elapsed_seconds = int((now - started_at).total_seconds())
             minutes = elapsed_seconds // 60
             seconds = elapsed_seconds % 60
-            elapsed_text = f"Czas od wysłania: {minutes:02d}:{seconds:02d}"
+            elapsed_text = f"Time from job was sent: {minutes:02d}:{seconds:02d}"
 
         try:
             entity = get_job_status(job_id)
         except ResourceNotFoundError:
-            return f"Job {job_id}: status jeszcze niedostępny", no_update, False, elapsed_text
+            return f"Job {job_id}: status not available", no_update, False, elapsed_text
         except Exception as e:
-            return f"Job {job_id}: błąd odczytu statusu: {str(e)}", no_update, False, elapsed_text
+            return f"Job {job_id}: cannot read status: {str(e)}", no_update, False, elapsed_text
 
         status = entity.get("status", "unknown")
 
@@ -133,13 +133,13 @@ def poll_job_status(n_intervals, job_data):
         if status == "done":
             blob_name = entity.get("result_blob_name")
             if not blob_name:
-                return f"Job {job_id}: done, ale brak result_blob_name", no_update, True, elapsed_text
+                return f"Job {job_id}: done, but no result_blob_name", no_update, True, elapsed_text
 
             try:
                 result_text = get_job_result(blob_name)
                 return f"Job {job_id}: done", result_text, True, elapsed_text
             except Exception as e:
-                return f"Job {job_id}: done, ale błąd pobrania wyniku: {str(e)}", no_update, True, elapsed_text
+                return f"Job {job_id}: done, but cannot get the result: {str(e)}", no_update, True, elapsed_text
 
         if status == "error":
             error_message = entity.get("error_message", "Unknown error")
@@ -160,22 +160,22 @@ def poll_job_status(n_intervals, job_data):
 )
 def submit_job(n_clicks, prompt):
     if not prompt or not prompt.strip():
-        return "Wpisz prompt.", None, True, "", "", ""
+        return "Write a prompt.", None, True, "", "", ""
 
     try:
         job_id = send_job_to_queue(prompt)
         started_at = datetime.now(timezone.utc).isoformat()
 
         return (
-            f"Job wysłany. job_id={job_id}",
+            f"Job sent. job_id={job_id}",
             {"job_id": job_id, "started_at": started_at},
             False,
-            "Job uruchomiony...",
+            "Job is running...",
             "",
-            "Czas od wysłania: 00:00",
+            "Time from job sent: 00:00",
         )
     except Exception as e:
-        return f"Błąd przy wysyłaniu joba: {str(e)}", None, True, "", "", ""
+        return f"Error while sending job: {str(e)}", None, True, "", "", ""
 
 
 
