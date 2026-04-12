@@ -59,7 +59,7 @@ def upsert_job_status(job_id: str, status: str, **extra_fields):
 
 def run_llm(payload: dict) -> str:
     prompt = payload.get("prompt", "")
-    time.sleep(10)
+    time.sleep(300)
     return f"Generated response for prompt: {prompt}"
 
 
