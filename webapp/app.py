@@ -26,7 +26,7 @@ def get_queue_client():
     return QueueClient.from_connection_string(
         conn_str=get_storage_connection_string(),
         queue_name=os.getenv("JOB_QUEUE_NAME", "llm-jobs"),
-        message_encode_policy=TextBase64EncodePolicy(),
+        message_encode_policy=TextBase64EncodePolicy(), # important! Base64 required for JSON file
     )
 
 def send_job_to_queue(prompt: str):
@@ -58,16 +58,16 @@ app.layout = html.Div(
         html.H2("LLM async demo"),
         dcc.Textarea(
             id="prompt-input",
-            placeholder="Wpisz prompt...",
+            placeholder="Write a prompt...",
             style={"width": "100%", "height": "180px"},
         ),
         html.Br(),
-        html.Button("Generate", id="generate-btn", n_clicks=0),
-        html.Div(id="submit-status", style={"marginTop": "16px"}),
+        html.Button("Generate", id="generate-btn", n_clicks=0), # connecion to queue
+        html.Div(id="submit-status", style={"marginTop": "16px"}), # status output
         html.Div(id="job-status", style={"marginTop": "12px"}),
         dcc.Store(id="job-store"),
         html.Div(id="elapsed-time", style={"marginTop": "8px"}),
-        dcc.Interval(id="poll-interval", interval=5000, n_intervals=0, disabled=True),
+        dcc.Interval(id="poll-interval", interval=30000, n_intervals=0, disabled=True), # call back 30s 
         html.Pre(id="result-output", style={"whiteSpace": "pre-wrap", "marginTop": "16px"})
     ],
     style={"maxWidth": "900px", "margin": "40px auto"},
