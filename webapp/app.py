@@ -190,6 +190,10 @@ from uuid import uuid4
 
 from azure.storage.blob import BlobServiceClient
 
+app = Dash(__name__)
+server = app.server
+
+
 
 CONNECTION_STRING = os.getenv("APP_STORAGE_CONNECTION_STRING")
 CONTAINER_NAME = os.getenv("AZURE_STORAGE_CONTAINER", "llm-jobs")
@@ -242,7 +246,7 @@ def create_job(prompt: str, user_id: str | None = None) -> str:
 
 
 
-app = Dash(__name__)
+
 
 app.layout = html.Div([
     dcc.Textarea(id="prompt-input", style={"width": "100%", "height": "200px"}),
