@@ -191,8 +191,8 @@ from uuid import uuid4
 from azure.storage.blob import BlobServiceClient
 
 
-CONNECTION_STRING = os.environ["AZURE_STORAGE_CONNECTION_STRING"]
-CONTAINER_NAME = os.environ.get("AZURE_STORAGE_CONTAINER", "llm-jobs")
+CONNECTION_STRING = os.getenv("APP_STORAGE_CONNECTION_STRING")
+CONTAINER_NAME = os.getenv("AZURE_STORAGE_CONTAINER", "llm-jobs")
 
 
 def get_blob_service_client() -> BlobServiceClient:
