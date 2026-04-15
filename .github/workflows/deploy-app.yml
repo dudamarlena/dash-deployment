@@ -13,6 +13,9 @@ env:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
 
     steps:
       - name: Checkout
@@ -27,13 +30,16 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-
-      - name: Build for App Service
-        uses: azure/appservice-build@v2
-
+          
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+            client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_934183BDA8F840B29082F99553D1B65A }}
+            tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_4628C7D191CC456EB9B33AA3D0C6D481 }}
+            subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_951B210BB09F45B5B17F3DF965F3B62F }}
+          
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: ${{ env.AZURE_WEBAPP_NAME }}
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
           package: .

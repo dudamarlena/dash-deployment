@@ -33,6 +33,9 @@ jobs:
         run: |
           python -m venv worker/venv
           source worker/venv/bin/activate
+          scm-do-build-during-deployment: true
+          enable-oryx-build: true
+          
 
       - name: Install dependencies
         run: pip install -r worker/requirements.txt
