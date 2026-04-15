@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 env:
-  AZURE_WEBAPP_NAME: ai-assistant-dash-web-app
+  AZURE_WEBAPP_NAME: 'ai-assistant-dash-web-app'
   PYTHON_VERSION: '3.12'
 
 jobs:
